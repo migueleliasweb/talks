@@ -1,0 +1,244 @@
+# My OSS experience
+
+Miguel Elias dos Santos
+Aug 2024 | golang-syd
+
+## Quick introduction
+
+- Moved to Sydney ~7h ago
+- Loves motorcycles (and other things that go vroom vroom)
+- Platform Engineer for ~13 years
+- Specialises in building Kubernetes-native platforms at scale using Go
+
+.image /static/gopher1.png
+.caption _Gopher_ by [[https://instagram.com/reneefrench][Renee French]]
+
+	Fun fact: I started off as a WebDesigner many many years ago....
+
+## About Open Source Software (OSS)
+
+An oversimplified definition:
+
+	Open source software is software with source code that anyone can inspect, modify, and enhance.
+
+.image ossi.png _ 200
+
+## Licensing
+
+.image approved-licenses.png _ 800
+
+.image licensing.png _ 800
+.caption [[https://opensource.org/licenses][opensource.org/licenses]]
+
+There's lots... (yes, those are 11 pages of licenses to choose from)
+
+## So, you've found a open source project and want to contribute
+
+Let's say you've found an open source project you want to contribute to. 
+You have your eyes set on it. 
+You've found possible improvements and you know what needs to be done. 
+
+So, YOLO, let's do it!?!
+
+## So, you've found a open source project and want to contribute
+
+Let's say you've found an open source project you want to contribute to. 
+You have your eyes set on it. 
+You've found possible improvements and you know what needs to be done. 
+
+So, YOLO, let's do it!?! Wait!
+
+.image wait.png
+
+## What does it take to create a contribution?
+
+: Some hardcode open source enthusiasts like to scavenge the deep corners 
+: of github for projects in dire need of contributors. All the power to them. 
+: I've got to pick my battles. As a full-time Platform Engineer and a father of a little 3yo tasmanian devil, more often than not, the projects pick me.
+
+: Whenever I'm working with an open source project and I happen to come across a possible 
+: improvement, a missing feature, undocumented behaviour, etc, I take this as an opportunity to give
+: back to the community. Some companies let you work on open source as part of your job, sometimes, you need 
+: to work at your own time.
+
+- Time
+- A good understanding of the problem you're attempting to solve __and its codebase__
+- Good communication
+- Be polite
+- Try not to rush things
+
+: Be mindful of how much actual time you have available. Sometimes creating an
+: issue and showwing some troubleshooting steps can be enough to help a core maintainer
+: to understand the issue and fix it.
+
+.image go-github1.png _ 600
+.image go-github2.png _ 600
+
+## What does it take to create a contribution?
+
+.image go-github3.png
+
+## Let me give you some context
+
+- Golang SDK to interact with Github's rest API
+- Authored by Google
+- Quite popular lib
+- Written in Go :)
+
+.image go-github-home.png _ 700
+.caption LOC with $(wc -l `find . -name *.go`) ~190k
+
+## It's Go time
+
+Quick checklist:
+
+- The plan: Generate interfaces for the `go-github` package to facilitate unit testing ✔
+- The core maintainers were onboard with the idea ✔
+- I had familiarity with the codebase ✔
+
+Just 24h later, I was on fire 🔥...
+
+.image go-github-pr1.png _ 1200
+
+## It's Go time
+
+The fist challenge
+
+.image go-github-pr2.png _ 1200
+
+## Keep calm and it's Go time again!
+
+.image go-github-pr3.png _ 900
+
+## Don't forget to keep collecting feedback along the way
+
+The OG PR #1800 from Feb/2021
+
+.image feedback2.png _ 1000
+
+A few closed PR attempts...
+
+.image feedback1.png _ 1000
+
+(this took almost 5 months)
+
+## One last try...maybe two?
+
+But this time, things were different...
+
+- No new dependencies
+- No _interface_ generation
+
+.image go-github-pr4.png _ 800
+.image go-github-pr8.png _ 600
+
+## Light at the end of the tunnel, I think?
+
+Things have started to look up...
+
+.image go-github-pr7.png _ 800
+
+## Work with and around existing constraints
+
+This time around, instead of using code generation to automagically generate interfaces for 
+existing types, I've found out the client instantiation accepted an `http.Client` type.
+
+I can work with that 💡!
+
+.image go-github-pr5.png _ 1000
+
+## How unit tests were written before my PR
+
+.image unittest1.png _ 800
+
+## How unit tests were written with my PR
+
+.image unittest2.png _ 800
+
+## But in the end...
+
+The core maintainers opted for not merging the code __AND THAT'S FINE!__
+
+They had some legitimate concerns:
+
+- The code wasn't adding any __client__ functionalities to the library
+- The amount of code just to enable the new testing abstractions was substantial (if they were to be implemented for all the existing types)
+- As far as the SDK was concerned, this were already tested
+- It was a _nice to have_ instead of a __must have__
+
+But there was an upside for all of this:
+
+.image feedback3.png _ 900
+.caption 👀
+
+## Enter go-github-mock
+
+.image go-github-mock1.png _ 900
+
+## Examples `mock.NewMockedHTTPClient`
+
+	mockedHTTPClient := mock.NewMockedHTTPClient(
+		mock.WithRequestMatch(
+			mock.GetUsersByUsername,
+			github.User{
+				Name: github.String("foobar"),
+			},
+		),
+		mock.WithRequestMatch(
+			mock.GetUsersOrgsByUsername,
+			[]github.Organization{
+				{
+					Name: github.String("foobar123thisorgwasmocked"),
+				},
+			},
+		),
+		mock.WithRequestMatchHandler(
+			mock.GetOrgsProjectsByOrg,
+			http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				w.Write(mock.MustMarshal([]github.Project{
+					{
+						Name: github.String("mocked-proj-1"),
+					},
+					{
+						Name: github.String("mocked-proj-2"),
+					},
+				}))
+			}),
+		),
+	)
+
+## Using the mocked client
+
+	c := github.NewClient(mockedHTTPClient)
+
+	ctx := context.Background()
+
+	user, _, userErr := c.Users.Get(ctx, "myuser")
+
+	// user.Name == "foobar"
+
+	orgs, _, orgsErr := c.Organizations.List(
+		ctx,
+		*(user.Name),
+		nil,
+	)
+
+	// orgs[0].Name == "foobar123thisorgwasmocked"
+
+	projs, _, projsErr := c.Organizations.ListProjects(
+		ctx,
+		*orgs[0].Name,
+		&github.ProjectListOptions{},
+	)
+
+	// projs[0].Name == "mocked-proj-1"
+	// projs[1].Name == "mocked-proj-2"
+
+## `go-github-mock` features
+
+- Create mocks for successive calls for the same endpoint
+- Pagination support (see mock.WithRequestMatchPages)
+- Mock error returns
+- High level abstraction helps writing readabe unittests (see mock.WithRequestMatch)
+- Lower level abstraction for advanced uses (see mock.WithRequestMatchHandler)
+- Mock rate limiting errors from the api (see mock.WithRateLimit)
