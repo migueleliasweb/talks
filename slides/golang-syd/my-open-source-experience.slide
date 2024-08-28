@@ -242,3 +242,20 @@ But there was an upside for all of this:
 - High level abstraction helps writing readabe unittests (see mock.WithRequestMatch)
 - Lower level abstraction for advanced uses (see mock.WithRequestMatchHandler)
 - Mock rate limiting errors from the api (see mock.WithRateLimit)
+
+## Now a personal story
+
+I moved companies...twice after writing that library.
+
+So, one day I was coding a Github integration that would integrate an internal GitOps workflow
+to Github and I thought: 
+
+I know exactly the right library to use when writing my tests! My library!
+
+But turns out, someone had already found it! 👀
+
+.image mention.png
+
+## Questions?
+
+(if we have time)

@@ -1,7 +1,6 @@
 # TALKS
 
-- Golang AU:
-    - My open source journey
+Check `slides/`
 
 # Install `present`
 
