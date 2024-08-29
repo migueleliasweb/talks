@@ -175,7 +175,7 @@
 
   .slides.layout-widescreen > article.far-past,
   .slides.layout-faux-widescreen > article.far-past {
-    display: block;
+    display: none;
     transform: translate(-2260px);
     -o-transform: translate(-2260px);
     -moz-transform: translate(-2260px);
@@ -183,7 +183,7 @@
   }
   .slides.layout-widescreen > article.past,
   .slides.layout-faux-widescreen > article.past {
-    display: block;
+    display: none;
     transform: translate(-1130px);
     -o-transform: translate(-1130px);
     -moz-transform: translate(-1130px);
@@ -201,7 +201,7 @@
   }
   .slides.layout-widescreen > article.next,
   .slides.layout-faux-widescreen > article.next {
-    display: block;
+    display: none;
     transform: translate(1130px);
     -o-transform: translate(1130px);
     -moz-transform: translate(1130px);
@@ -211,7 +211,7 @@
   }
   .slides.layout-widescreen > article.far-next,
   .slides.layout-faux-widescreen > article.far-next {
-    display: block;
+    display: none;
     transform: translate(2260px);
     -o-transform: translate(2260px);
     -moz-transform: translate(2260px);
